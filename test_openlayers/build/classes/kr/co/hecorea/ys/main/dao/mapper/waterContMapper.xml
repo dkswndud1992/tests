@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.hecorea.ys.main.dao.WaterContDAO">
+	
+	<select id="selectDamInfo" resultType="hashmap" parameterType="hashmap">
+select x.tm as tm
+     , COALESCE(xx.dam_1_1, '0.00') as dam_1_1, COALESCE(xx.dam_1_2, '0.00') as dam_1_2, COALESCE(xx.dam_2_1, '0.00') as dam_2_1, COALESCE(xx.dam_2_2, '0.00') as dam_2_2, COALESCE(xx.dam_3_1, '0.00') as dam_3_1, COALESCE(xx.dam_3_2, '0.00') as dam_3_2
+     , COALESCE(xx.dam_4_1, '0.00') as dam_4_1, COALESCE(xx.dam_4_2, '0.00') as dam_4_2, COALESCE(xx.dam_5_1, '0.00') as dam_5_1, COALESCE(xx.dam_5_2, '0.00') as dam_5_2, COALESCE(xx.dam_6_1, '0.00') as dam_6_1, COALESCE(xx.dam_6_2, '0.00') as dam_6_2
+     , COALESCE(xx.dam_7_1, '0.00') as dam_7_1, COALESCE(xx.dam_7_2, '0.00') as dam_7_2, COALESCE(xx.dam_8_1, '0.00') as dam_8_1, COALESCE(xx.dam_8_2, '0.00') as dam_8_2, COALESCE(xx.dam_9_1, '0.00') as dam_9_1, COALESCE(xx.dam_9_2, '0.00') as dam_9_2
+  from (
+	   SELECT TO_CHAR(tm, 'YYYYMMDDHH24MI') AS tm
+	     FROM generate_series(TO_TIMESTAMP(#{select_time}, 'YYYYMMDDHH24MI')- INTERVAL '180' minute, TO_TIMESTAMP(#{select_time}, 'YYYYMMDDHH24MI'), interval '10 min') kcloud(tm)) 
+	     x left outer join 
+	   (
+	   select c.obs_dt as obs_dt
+			, avg(case when a.map_id = '114' then c.prcp end)::char(4) as dam_1_1 , avg(case when a.map_id = '114' then d.prcp end)::char(4) as dam_1_2
+			, avg(case when a.map_id = '121' then c.prcp end)::char(4) as dam_2_1, avg(case when a.map_id = '121' then d.prcp end)::char(4) as dam_2_2
+			, avg(case when a.map_id = '126' then c.prcp end)::char(4) as dam_3_1, avg(case when a.map_id = '126' then d.prcp end)::char(4) as dam_3_2
+			, avg(case when a.map_id = '141' then c.prcp end)::char(4) as dam_4_1, avg(case when a.map_id = '141' then d.prcp end)::char(4) as dam_4_2
+			, avg(case when a.map_id = '162' then c.prcp end)::char(4) as dam_5_1, avg(case when a.map_id = '162' then d.prcp end)::char(4) as dam_5_2
+			, avg(case when a.map_id = '174' then c.prcp end)::char(4) as dam_6_1, avg(case when a.map_id = '174' then d.prcp end)::char(4) as dam_6_2
+			, avg(case when a.map_id = '56' then c.prcp end) ::char(4) as dam_7_1, avg(case when a.map_id = '56' then d.prcp end)::char(4) as dam_7_2
+			, avg(case when a.map_id = '726' then c.prcp end)::char(4) as dam_8_1, avg(case when a.map_id = '726' then d.prcp end)::char(4) as dam_8_2
+			, avg(case when a.map_id = '708' then c.prcp end)::char(4) as dam_9_1, avg(case when a.map_id = '708' then d.prcp end)::char(4) as dam_9_2
+		 from tbl_dam_info a, tbl_sm_basin b, tbl_sm_basin_gauge_map c, tbl_sm_basin_radar_map d
+		where 1=1
+		  and a.map_id = b.map_id
+		  and b.sm_basin_cd = c.sm_basin_cd
+	      and c.sm_basin_cd = d.sm_basin_cd
+		  and c.obs_dt = d.obs_dt
+	      <![CDATA[and c.obs_dt <= #{select_time}]]>
+	      <![CDATA[and c.obs_dt >= TO_CHAR(TO_TIMESTAMP(#{select_time}, 'YYYYMMDDHH24MI')- INTERVAL '180' minute,'YYYYMMDDHH24MI')]]>
+	 group by c.obs_dt
+	   ) xx on x.tm = xx.obs_dt 
+order by x.tm desc
+	</select>
+	
+	<!-- geom 넣기 -->
+	<insert id="insertGeom" parameterType="java.util.ArrayList">
+		INSERT INTO public.test_openlayers (code, code_info, geom) 
+		VALUES
+		<foreach collection="list" item="item" index="index" separator =",">
+			(#{item.OBJECTID}, #{item.CTP_KOR_NM}, ST_GeomFromText(#{item.geom}, 5186))
+	    </foreach>
+	</insert>
+	
+	
+	<select id="selectData" resultType="String">
+		select row_to_json(fc) AS geojson
+		from (
+			select 'FeatureCollection' AS type
+				, json_build_object(
+					'type'
+					,'name'
+					,'properties'
+					, json_build_object('name','EPSG:4326')
+				) AS crs
+				, array_to_json(array_agg(f)) AS features
+			from (
+				select 'Feature' AS type
+					, st_asGeoJson(
+						ST_Transform(geom, 4326)
+						, 7
+					)::json AS geometry  
+					, json_build_object(
+						'code', code 
+						, 'info', code_info
+						, 'no', no
+					) AS properties
+				from public.test_openlayers
+				group by no
+					, code
+					, code_info
+					, geom
+			) AS f
+		) AS fc
+	</select>
+	
+</mapper>

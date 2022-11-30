@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.main.dao.ajaxDAO">
+
+	<select id="selectData" parameterType="hashmap" resultType="hashmap">
+		SELECT * 
+		  FROM ${table_name}
+		ORDER BY ${field} DESC
+		  LIMIT 20, 10
+	</select>
+	
+	<select id="selectTable" resultType="hashmap">
+		SELECT table_name AS TABLELIST 
+		   FROM information_schema.tables
+		WHERE table_schema = DATABASE()
+		     AND table_name regexp "^kma.*|^TBL_KMA.*"
+		ORDER BY TABLELIST DESC
+	</select>
+	
+	<select id="selectColumn" parameterType="hashmap" resultType="hashmap">
+		SHOW FULL COLUMNS FROM ${table_name}
+	</select>
+	
+	
+	<!-- 건설현장 강우 데이터 실황 -->
+	<select id="selectObsRainList" parameterType="hashmap" resultType="hashmap">
+		WITH RECURSIVE nrows(date) AS (
+			SELECT STR_TO_DATE(#{yyyymmddhhmm}, '%Y%m%d%H%i') UNION ALL 
+			SELECT DATE_ADD(date, INTERVAL -10 minute) FROM nrows WHERE date &gt; DATE_ADD(STR_TO_DATE(#{yyyymmddhhmm}, '%Y%m%d%H%i'), INTERVAL -6 hour)
+		)
+		SELECT yyyymmddhhmm AS "obsDt"
+			, rn_mm AS "obsRn"
+		FROM kma_aws_10min_qc
+		WHERE stn_id = 918
+		AND yyyymmddhhmm IN (SELECT DATE_FORMAT(date, '%Y%m%d%H%i') FROM nrows)
+		ORDER BY yyyymmddhhmm DESC
+	</select>
+	
+	<!-- 건설현장 풍속, 기온 데이터 실황 -->
+	<select id="selectObsWindWithTmpList" parameterType="hashmap" resultType="hashmap">
+		WITH RECURSIVE nrows(date) AS (
+			SELECT STR_TO_DATE(#{yyyymmddhh}, '%Y%m%d%H') UNION ALL 
+			SELECT DATE_ADD(date, INTERVAL -1 hour) FROM nrows WHERE date &gt; DATE_ADD(STR_TO_DATE(#{yyyymmddhh}, '%Y%m%d%H'), INTERVAL -6 hour)
+		)
+		SELECT yyyymmddhh AS "obsDt"
+			, ws_mps AS "obsWs"
+			, tmp_deg AS "obsTmp"
+			, FLOOR(RAND() * 10) -5 AS x
+			, FLOOR(RAND() * 10) -5 AS y
+		FROM kma_asos_1hr_qc
+		WHERE stn_id = 162
+		AND yyyymmddhh IN (SELECT DATE_FORMAT(date, '%Y%m%d%H') FROM nrows)
+		ORDER BY yyyymmddhh DESC 
+	</select>
+	
+</mapper>

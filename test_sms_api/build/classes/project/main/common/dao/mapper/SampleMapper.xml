@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.main.common.dao.SampleDAO">
+
+	<!-- 연결 테스트 -->
+	<select id="dbTestSample" parameterType="String" resultType="int">
+		<choose>
+			<when test="_parameter.equals('oracle')">
+		      	select 1 from dual
+		    </when>
+		    <otherwise>
+		      	select 1
+		    </otherwise>
+	  	</choose>
+	</select>
+
+	<!-- 단순 조회 -->
+	<select id="selectSample" parameterType="hashmap" resultType="String">
+		SELECT sample_password
+		  FROM tbl_sample
+		WHERE sample_id = #{selectParam}
+			 AND sample_yn = "1"
+	</select>
+	
+	<!-- 리스트 조회(mysql) -->
+	<select id="selectSampleList" parameterType="hashmap" resultType="hashmap">
+		SELECT sample_date, sample_id, sample_password
+  		  FROM tbl_sample
+  		WHERE sample_yn = "1"
+		ORDER BY sample_id DESC
+  		  LIMIT #{startNum}, #{limitNum}
+	</select>
+	
+	<!-- 리스트 조회(oracle) -->
+	<!--
+	<select id="selectSampleList" parameterType="hashmap" resultType="hashmap">
+		SELECT sub.sample_date, sub.sample_id, sub.sample_password
+		  FROM(
+		        SELECT ROWNUM AS rnum, main.sample_date, main.sample_id, main.sample_password
+		          FROM ( 
+	            		 	 SELECT sample_date, sample_id, sample_password
+					  		   FROM tbl_sample
+					  		 WHERE sample_yn = "1"
+							 ORDER BY sample_id DESC
+		           ) main
+		         WHERE ROWNUM <= #{startNum}+#{limitNum}
+		  ) sub
+		 WHERE sub.rnum > #{startNum}
+	</select>
+	-->
+	
+	<!-- 리스트 조회(postgresql) -->
+	<!--
+	<select id="selectSampleList" parameterType="hashmap" resultType="hashmap">
+		SELECT sample_date, sample_id, sample_password
+  		  FROM tbl_sample
+  		WHERE sample_yn = "1"
+		ORDER BY sample_id DESC
+  		  LIMIT #{limitNum}
+  	   OFFSET #{startNum}
+	</select>
+	-->
+	
+	<!-- 생성(생성 시 반환값 가져오기) -->
+	<insert id="insertSample" parameterType="hashmap">
+		INSERT INTO tbl_sample(sample_id, sample_password, sample_date ) 
+		values(#{insertParam}, #{insertEncryptionParam}, #{nowDateStr})
+		<selectKey resultType="string" keyProperty="nowDateStr" order="AFTER">
+        	SELECT CONCAT(sample_date, "insertReturn") AS sample_date
+			  FROM tbl_sample
+			WHERE sample_id = #{insertParam}
+				 AND sample_yn = "1"     
+    	</selectKey> 
+	</insert >
+	
+	<!-- 업데이트(파라미터없으면 그대로) -->
+    <update id="updateSample" parameterType="hashmap">
+        UPDATE tbl_sample 
+			<trim prefix="SET" suffixOverrides=",">
+			    <if test='afterParam != ""'>sample_id = #{afterParam},</if>
+			    <if test='updateEncryptionParam != ""'>sample_password= #{updateEncryptionParam},</if>
+			</trim>
+		WHERE sample_yn ='1'
+			 AND sample_id = #{beforeParam}
+    </update>
+    
+    <!-- 삭제(업데이트) -->
+	<update id="deleteSample" parameterType="String">
+        UPDATE tbl_sample
+			  SET sample_yn = '0'
+		 WHERE sample_yn = '1'
+			 AND sample_id = #{deleteParam}
+    </update>
+    
+</mapper>

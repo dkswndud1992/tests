@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.main.common.dao.SituationDAO">
+
+	<select id="selectMetList" parameterType="hashmap" resultType="hashmap">
+		   SELECT a.file_id , a.file_name , DATE_FORMAT(a.file_dt,'%Y.%m.%d %T') file_dt, b.file_info
+			 FROM manage_file_log a, manage_file_main b
+		   WHERE 1=1
+				AND a.file_type = b.file_type 
+				AND b.use_flag = 1
+			ORDER BY a.file_dt DESC
+			  LIMIT #{startNum}, #{limitNum}
+	</select>
+
+    
+</mapper>

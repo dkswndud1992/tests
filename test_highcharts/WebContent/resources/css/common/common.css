@@ -1,0 +1,86 @@
+@charset "UTF-8";
+
+body {
+	background-color: black;
+	color: white;
+}
+
+header {
+	font-size:20px;
+	font-weight: bold;
+    left:0px; 
+    top:0px; 
+    width: 80%;
+	min-width: 310px; 
+	text-align: center;
+	margin: auto;
+}
+
+.content{
+	width: 80%;
+	margin: auto;
+	padding:20px;
+	margin-bottom: 100px;
+	min-width: 310px;
+}
+
+.chart{
+	margin: auto;
+	min-width: 310px;
+}
+
+footer {
+
+    position: fixed;
+    bottom:0px; 
+    width: 100%;
+	min-width: 310px; 
+	margin: auto;
+}
+
+ul {
+    list-style:none;
+    padding:0;
+    text-align: center;
+}
+
+li{
+	background-color: rgba(0, 0, 0, 0.8);
+	display: inline-block;
+	margin: auto;
+	padding: 5px;
+	border-radius: 12px;
+	border: thick dotted #f44336;
+	
+	
+}
+
+table {
+   	width: 100%;
+    border: 1px solid #444444;
+    border-collapse: collapse;
+    border-color: white;
+    display: table;
+    margin-left: auto;  
+    margin-right: auto; 
+}
+th, td {
+ 	border: 1px solid #444444;
+ 	border-color: white;
+}
+
+#view_db_table {
+	width:100%;  
+	overflow:auto;
+}
+
+
+
+
+.manu_btn:link { color: rgba(200, 200, 200, 0.5); text-decoration: none;}
+.manu_btn:visited { color: rgba(200, 200, 200, 0.5); text-decoration: none;}
+.manu_btn:hover { color: rgba(200, 200, 200, 1.0);  text-decoration: none; cursor: pointer;}
+
+.active.manu_btn:link { color: rgba(200, 200, 200, 1.0); text-decoration: none;}
+.active.manu_btn:visited { color: rgba(200, 200, 200, 1.0); text-decoration: none;}
+.active.manu_btn:hover { color: rgba(200, 200, 200, 1.0);  text-decoration: none;}
