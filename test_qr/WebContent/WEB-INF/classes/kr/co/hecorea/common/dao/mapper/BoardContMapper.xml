@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.hecorea.common.dao.BoardContDAO">
+	<!-- 게시물 등록 -->
+	<select id="insertBoard" parameterType="hashmap" resultType="int">
+		INSERT INTO tn_ntt_info (
+			user_id,
+			ntt_sj,
+			ntt_cn,
+			use_yn
+		) 
+		VALUES (
+			#{userId},
+			#{nttSj},
+			#{nttCn},
+			'y'
+		)
+		RETURNING ntt_code AS "nttCode"
+	</select>
+	
+	<!-- 게시물 수정 -->
+	<update id="updateBoard" parameterType="hashmap">
+		UPDATE tn_ntt_info
+		SET ntt_sj = #{nttSj},
+			ntt_cn = #{nttCn}
+		WHERE ntt_code = CAST(#{nttCode} AS INTEGER)
+	</update>
+	
+	<!-- 게시물 리스트 개수(if 작은 따옴표 주의) -->
+	<select id="selectBoardListCnt" parameterType="hashmap" resultType="int">
+		SELECT count(ntt_code) AS "nttCnt"
+		FROM tn_ntt_info
+		WHERE use_yn = 'y'
+		<choose>
+			<when test = 'searchType == "1"'>
+				AND ntt_sj LIKE CONCAT('%',#{searchValue},'%') 
+			</when>
+			<when test = 'searchType == "2"'>
+				AND ntt_cn LIKE CONCAT('%',#{searchValue},'%') 
+			</when>
+			<otherwise>
+				AND 1=1
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 게시물 리스트(if 작은 따옴표 주의) -->
+	<select id="selectBoardList" parameterType="hashmap" resultType="hashmap">
+		SELECT a.ntt_code AS "nttCode"
+			, ROW_NUMBER() OVER(
+				ORDER BY a.ntt_code ASC
+			) AS "nttNo"
+			, a.user_id AS "userId"
+			, a.ntt_sj AS "nttSj"
+			, c.user_nm AS "userNm"
+			, to_char(a.regist_dt, 'YYYY-MM-DD') AS "registDt"
+			, CASE 
+				WHEN b.file_code IS NOT NULL THEN b.file_code
+				ELSE '-999'
+			END AS "fileCode"
+			, CASE 
+				WHEN b.file_nm IS NOT NULL THEN b.file_nm
+				ELSE '-999'
+			END AS "fileNm"
+			, CASE 
+				WHEN b.real_file_nm IS NOT NULL THEN b.real_file_nm
+				ELSE '-999'
+			END AS realFileNm
+		FROM tn_ntt_info a
+		INNER JOIN tn_user_info c
+		ON a.user_id = c.user_id
+		LEFT OUTER JOIN tn_ntt_file b
+		ON a.ntt_code = b.ntt_code
+		WHERE a.use_yn = 'y'
+		<choose>
+			<when test = 'searchType == "1"'>
+				AND a.ntt_sj LIKE CONCAT('%',#{searchValue},'%') 
+			</when>
+			<when test = 'searchType == "2"'>
+				AND a.ntt_cn LIKE CONCAT('%',#{searchValue},'%') 
+			</when>
+			<otherwise>
+				AND 1=1
+			</otherwise>
+		</choose>
+		ORDER BY a.ntt_code DESC 
+		LIMIT CAST(#{limitNum} AS INTEGER)
+		OFFSET CAST(#{startNum} AS INTEGER)
+	</select>
+	
+	<!-- 게시물 삭제 -->
+	<update id="deleteBoard" parameterType="hashmap">
+		UPDATE tn_ntt_info
+		SET use_yn = 'n'
+		WHERE ntt_code = CAST(#{nttCode} AS INTEGER)
+	</update>
+	
+	<!-- 파일 업로드 -->
+	<insert id="insertFile" parameterType="hashmap">
+		INSERT INTO tn_ntt_file (
+			ntt_code,
+			file_nm,
+			real_file_nm
+		) 
+		VALUES (
+			CAST(#{nttCode} AS INTEGER),
+			#{fileNm},
+			#{realFileNm}
+		)
+	</insert>
+	
+	<!-- 파일 다운로드 -->
+	<select id="selectFile" parameterType="hashmap" resultType="hashmap">
+		SELECT file_nm AS "fileNm"
+			, real_file_nm AS "realFileNm"
+		FROM tn_ntt_file
+		WHERE file_code = CAST(#{fileCode} AS INTEGER)
+		LIMIT 1
+	</select>
+	
+	<!-- 파일 정보 수정 -->
+	<update id="updateFile" parameterType="hashmap">
+		UPDATE tn_ntt_file
+		SET file_nm = #{fileNm}
+			, real_file_nm = #{realFileNm}
+		WHERE file_code = CAST(#{fileCode} AS INTEGER)
+	</update>
+	
+	<!-- 파일 제거 -->
+	<update id="deleteFile" parameterType="hashmap">
+		UPDATE tn_ntt_file
+		SET ntt_code = -999
+		WHERE file_code = CAST(#{fileCode} AS INTEGER)
+	</update>
+	
+	
+</mapper>

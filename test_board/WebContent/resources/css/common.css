@@ -1,0 +1,35 @@
+body {
+   	background-color:black; 
+   	color:white; 
+   	text-align: center;
+}
+table {
+   	width: 80%;
+    border: 1px solid #444444;
+    border-collapse: collapse;
+    border-color: white;
+    display: table;
+    margin-left: auto;  
+    margin-right: auto; 
+}
+th, td {
+ 	border: 1px solid #444444;
+ 	border-color: white;
+}
+div {
+	float: right;
+}
+input{
+	margin: 5px;
+}
+textarea{
+	display: table;
+	margin-left: auto;  
+	margin-right: auto;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+a:link {text-decoration: none; color: white;}
+a:visited {text-decoration: none; color: white;}
+a:active {text-decoration: none; color: white;}
+a:hover {text-decoration: underline; color: yellow;}

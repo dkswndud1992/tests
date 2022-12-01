@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="project.main.dao.mapper.BoardMapper">
+ 	<!-- 
+        mybatis-config.xml의 typeAlias에 등록해두지 않았다면 
+        
+        <select id="selectMember" resultType="com.example.dto.MemberVO" >
+            SELECT board_no AS boardNo
+			, board_title AS boardTitle
+			, board_yn AS boardYn
+			FROM tbl_board
+			WHERE 1=1
+			AND board_yn = '1';  
+        </select>
+        parameterType같이 써줄수있음
+       ";" 붙여줘도 괜찮음.
+        이렇게 해야 한다.
+    -->
+    
+    <select id="listBoard" resultType="boardVO">
+        SELECT board_no AS boardNo
+					, board_title AS boardTitle
+					, board_date AS boardDate
+		  FROM tbl_board
+		WHERE 1=1
+			AND board_yn = '1'
+    </select>
+    
+    <select id="selectBoard" resultType="boardVO">
+        SELECT board_no AS boardNo
+					, board_title AS boardTitle
+					, board_contents AS boardContents
+					, board_date AS boardDate
+		    FROM tbl_board
+		  WHERE  1=1
+		       AND board_yn = '1'
+		       AND board_no = #{boardNo}
+    </select>
+    
+    <insert id="writeBoard"  useGeneratedKeys="true" keyProperty="boardNo" keyColumn="board_no" parameterType="boardVO">
+        INSERT INTO gwb.tbl_board(board_title, board_contents, board_date) 
+					values(#{boardTitle}, #{boardContents}, #{boardDate})
+		<selectKey keyProperty="boardNo" resultType="int" order="AFTER">
+		    SELECT board_no FROM gwb.tbl_board ORDER BY board_no DESC LIMIT 1
+		 </selectKey>
+    </insert>
+    
+    <update id="deleteBoard" parameterType="int">
+        UPDATE gwb.tbl_board 
+			  SET board_yn = '0'
+		 WHERE board_yn ='1'
+			 AND board_no = #{boardNo}
+    </update>
+    
+    <update id="updateBoard" parameterType="boardVO">
+        UPDATE gwb.tbl_board 
+			  SET board_title = #{boardTitle},
+					 board_contents  = #{boardContents}
+		 WHERE board_yn ='1'
+			 AND board_no = #{boardNo}
+    </update>
+    
+</mapper>
+
+
+<!--  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="project.main.dao.BoardDAO">
+
+	<select id="selectBasinRealList" parameterType="hashmap" resultType="hashmap">
+		SELECT IFNULL(a.BASIN_NM, '-') AS BASINNM
+			 , IFNULL(b.STN_NM_KR, '-') AS OBSNM
+			 , IFNULL(ROUND(a.PN_0_Y, 2), '-') AS PN0Y
+			 , b.USE_FLAG AS USEFLAG
+		  FROM TBL_RT_APPLY_FLOW_OBS a, TBL_WL_STN_INFO b
+		 WHERE 1=1
+		   AND a.OBS_CD = b.STN_CD
+		   AND a.INIT_DT = #{dt}
+	  ORDER BY a.BASIN_NM, a.OBS_CD
+	</select>
+	
+</mapper>
+-->
